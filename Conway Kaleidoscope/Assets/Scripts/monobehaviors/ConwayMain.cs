@@ -59,6 +59,8 @@ public class ConwayMain : MonoBehaviour
 
     void Start()
     {
+        Debug.Log("test xxx");
+
         ColumnCount = gridSize;
         RowCount = gridSize;
         RawCount = ColumnCount * RowCount;
