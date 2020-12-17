@@ -52,8 +52,6 @@ public struct SparseGridIndexer
 
        int cellIndex = adjustedX  + (adjustedY * columnCount);
 
-     //   Debug.Log("Grid cellxy: " + x + " " + y + " rawIndex: " + cellIndex + " cells.Length: ");
-
         return cellIndex;
     }
 

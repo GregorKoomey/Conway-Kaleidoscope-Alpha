@@ -20,7 +20,6 @@ public class ConwayDisplayGrid : MonoBehaviour
         state = displayState;
         colors = colorarray;
         backupState = new NativeArray<byte>(state.Length, Allocator.Persistent);
-    //    backupState.CopyFrom(state);
         
         cells = new GameObject[gridIndexer.RawCount()];
         cellRenderers = new SpriteRenderer[gridIndexer.RawCount()];
@@ -31,7 +30,6 @@ public class ConwayDisplayGrid : MonoBehaviour
     {
         for (int i = 0; i < state.Length; i++)
         {
- //           Debug.Log("UpdateDisplay cellIndex: " + i + " colorIndex: " + state[i]);
             if (backupState[i] != state[i])
                 SetCellColorIndex(i, state[i]);    
         }
@@ -60,7 +58,6 @@ public class ConwayDisplayGrid : MonoBehaviour
         int colorsLength = colors.Length;
         int adjustedColorIndex = SparseGridIndexer.BoundedIndexFor(state[rawIndex], (ushort) colorsLength);
         
- //       Debug.Log("rawIndex: " + rawIndex + " adjustedIndex: " + adjustedColorIndex + " colorsLength: " + colorsLength);
         cellColor = colors[adjustedColorIndex];
         
         cellRenderers[rawIndex].color = cellColor;
@@ -85,7 +82,6 @@ public class ConwayDisplayGrid : MonoBehaviour
                 Vector3 tempVec = new Vector3(x, y, 0f);
                 Quaternion tempQuat = Quaternion.identity;
                 GameObject tempCell = Instantiate(cellObject, tempVec, tempQuat, myTransform);
-                //SpriteRenderer sr = tempCell.GetComponent<SpriteRenderer>();
                 cells[cellIndex] = tempCell;
                 cellRenderers[cellIndex] = tempCell.GetComponent<SpriteRenderer>();
                 cellIndex += 1;

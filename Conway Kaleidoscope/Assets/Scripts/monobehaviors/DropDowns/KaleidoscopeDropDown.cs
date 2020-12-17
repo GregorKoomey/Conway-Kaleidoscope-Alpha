@@ -4,10 +4,7 @@
 public class KaleidoscopeDropDown : MonoBehaviour
 {
     private ConwayMain main;
-    
-    // public TextMeshProUGUI outPut;
-   
-    // Start is called before the first frame update
+
     void Start()
     {
         main = transform.GetComponent<ConwayMain>();

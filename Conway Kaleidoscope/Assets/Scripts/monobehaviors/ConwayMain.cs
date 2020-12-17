@@ -20,8 +20,11 @@ public class ConwayMain : MonoBehaviour
     public bool useParallelLogic;
     //private Ticker ticker;
 
+    [HideInInspector]
     public ushort ColumnCount;
+    [HideInInspector]
     public ushort RowCount;
+    [HideInInspector]
     public int RawCount;
     
     private GameObject _displayObject;
@@ -76,12 +79,10 @@ public class ConwayMain : MonoBehaviour
         //enable ticker logic
         Ticker.OnTick += delegate(object sender, Ticker.OnTickArgs args)
         {
-            //Debug.Log("ticker");
             if (_tickerActive)
             {
                 if (useParallelLogic)
                 {
-                    //Debug.Log("parallel enabled");
                     TickForwardConwayStateParallel();
                 }
                 else
@@ -106,11 +107,8 @@ public class ConwayMain : MonoBehaviour
         _indexer = new SparseGridIndexer(ColumnCount, RowCount);
 
         Camera.main.orthographicSize = ((ColumnCount + 1) / 2) + 1;
-        
 
         _displayColors = ColorFactory.GrayScaleReversed(5);
-
-
 
         int stateLength = (ColumnCount * RowCount);
         _conwayState = new NativeArray<bool>(stateLength, Allocator.Persistent);
@@ -176,8 +174,6 @@ public class ConwayMain : MonoBehaviour
         _adj_6.Dispose();
         _adj_7.Dispose();
         
-        //needsRecalcList.Dispose();
-        
         _displayState.Dispose();
 
         _mapAdjacents.Dispose();
@@ -201,26 +197,16 @@ public class ConwayMain : MonoBehaviour
 
                 for (int i = 0; i < _adjacentOffsets.Length; i++)
                 {
-     //               Debug.Log("x: " + x + " y: " + y + " i: " + i);
-
                     int adjacentOffsetX = _adjacentOffsets[i].XFrom(x);
                     int adjacentOffsetY = _adjacentOffsets[i].YFrom(y);
 
-  //                  Debug.Log("adjacentOffsetX: " + adjacentOffsetX + " adjacentOffsetY: " + adjacentOffsetY);
-                    
-                    
-                    
                     int adjustedX = SparseGridIndexer.WrappedIndexFor(adjacentOffsetX, ColumnCount);
                     int adjustedY = SparseGridIndexer.WrappedIndexFor(adjacentOffsetY, RowCount);
                     ushort adjustedRawValue = (ushort) _indexer.RawIndexFor(adjustedX, adjustedY);
                     
-
- //                   Debug.Log("AdjustedX: " + adjustedX + " AdjustedY: " + adjustedY + "adjustedRawValue: " + adjustedRawValue);
-                    
                     _mapAdjacents[adjacentsBaseIndex + i] =
                         (ushort) _indexer.RawIndexFor(adjustedX, adjustedY);
 
-//                    Debug.Log("Adjacent rawIndex value" + mapAdjacents[adjacentsBaseIndex+i]);
                 }
             }
         }
@@ -250,9 +236,6 @@ public class ConwayMain : MonoBehaviour
                 int mirroredX = SparseGridIndexer.MirroredIndexFor(x, ColumnCount);
                 int mirroredY = SparseGridIndexer.MirroredIndexFor(y, RowCount);
                 
-//                Debug.Log("x: " + x + " y: " + y +" mirroredX: " + mirroredX + " mirroredY: " + mirroredY);
-                
-
                 ushort firstIndex = (ushort) _indexer.RawIndexFor(x, y);
                 ushort secondIndex = (ushort) _indexer.RawIndexFor(mirroredX, y);
                 ushort thirdIndex = (ushort) _indexer.RawIndexFor(mirroredX, mirroredY);
@@ -270,11 +253,6 @@ public class ConwayMain : MonoBehaviour
     {
         _needsRecalc.CopyFrom(_conwayState);
         _previousConwayState.CopyFrom(_conwayState);
-       // needsRecalcList.Clear();
-
-        
-        
-//        NativeArray<bool>.Copy(conwayState, needsRecalc);
 
         for (int i = 0; i < _previousConwayState.Length; i++)
         {
