@@ -4,21 +4,21 @@ using UnityEngine;
 using TMPro;
 using Unity.Burst;
 using Unity.Jobs;
+using Unity.Entities;
+using Unity.Entities.CodeGeneratedJobForEach;
 
 public class ConwayMain : MonoBehaviour
 {
-    //public GameObject kaleidoscopeDropDown;
     public GameObject pausedDropdown;
-    //public GameObject brushesDropDown;
     
     [Range(2, 256)] [SerializeField] private ushort gridSize;
-   
-    //public Camera myCamera;
+    public bool useParallelLogic;
+
+    private int parallelGrain;
+
 
     [SerializeField] private GameObject displayObjectPrefab;
 
-    public bool useParallelLogic;
-    //private Ticker ticker;
 
     [HideInInspector]
     public ushort ColumnCount;
@@ -33,27 +33,10 @@ public class ConwayMain : MonoBehaviour
 
     private Color[] _displayColors;
 
-    private NativeArray<CellOffset> _adjacentOffsets;
-
-    private NativeArray<bool> _conwayState;
-    private NativeArray<bool> _previousConwayState;
-    private NativeArray<bool> _needsRecalc;
-    private NativeArray<ushort> _mapAdjacents;
-
-    //adjacency info for job code
-    private NativeArray<bool> _adj_0;
-    private NativeArray<bool> _adj_1;
-    private NativeArray<bool> _adj_2;
-    private NativeArray<bool> _adj_3;
-    private NativeArray<bool> _adj_4;
-    private NativeArray<bool> _adj_5;
-    private NativeArray<bool> _adj_6;
-    private NativeArray<bool> _adj_7;
+    private ConwayStateClass _myConwayState;
+    private ConwayDisplayState _myConwayDisplayState;
     
     private NativeArray<byte> _displayState;
-    private NativeArray<ushort> _mapMirroredDimensions;
-
-    private SparseGridIndexer _indexer;
 
     private bool _tickerActive;
     private bool _mirrorDisplay;
@@ -64,14 +47,13 @@ public class ConwayMain : MonoBehaviour
     {
         Debug.Log("test xxx");
 
+        parallelGrain = 64;
+
         ColumnCount = gridSize;
         RowCount = gridSize;
         RawCount = ColumnCount * RowCount;
         
         _pauseDropDownComponent = pausedDropdown.GetComponentInChildren<TMP_Dropdown>();
-
-        _adjacentOffsets = new NativeArray<CellOffset>(8, Allocator.Persistent);
-        SetAdjacentOffsets();
 
         _tickerActive = false;
         _mirrorDisplay = true;
@@ -81,14 +63,7 @@ public class ConwayMain : MonoBehaviour
         {
             if (_tickerActive)
             {
-                if (useParallelLogic)
-                {
-                    TickForwardConwayStateParallel();
-                }
-                else
-                {
-                    TickForwardConwayState();
-                }
+                TickForwardConwayState();
                 
                 UpdateDisplay();
             }
@@ -104,36 +79,18 @@ public class ConwayMain : MonoBehaviour
 
     private void InitializeAll()
     {
-        _indexer = new SparseGridIndexer(ColumnCount, RowCount);
 
         Camera.main.orthographicSize = ((ColumnCount + 1) / 2) + 1;
 
         _displayColors = ColorFactory.GrayScaleReversed(5);
 
         int stateLength = (ColumnCount * RowCount);
-        _conwayState = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _previousConwayState= new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _needsRecalc = new NativeArray<bool>(stateLength, Allocator.Persistent);
- 
-        _adj_0 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_1 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_2 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_3 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_4 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_5 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_6 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        _adj_7 = new NativeArray<bool>(stateLength, Allocator.Persistent);
-        
         
         _displayState = new NativeArray<byte>(stateLength, Allocator.Persistent);
-
-        _mapAdjacents = new NativeArray<ushort>(stateLength * 8, Allocator.Persistent);
-        _mapMirroredDimensions = new NativeArray<ushort>(stateLength * 4, Allocator.Persistent);
-
-        SetAdjacents();
-        SetMapMirroredDimensions();
         
-        //LogState();
+        _myConwayState = new ConwayStateClass(ColumnCount, RowCount); ///ushort -> byte for params
+        _myConwayDisplayState = new ConwayDisplayState(_displayState, _myConwayState._indexer);
+
         
         if (_mirrorDisplay)
             SetMirroredDisplayState();
@@ -161,181 +118,12 @@ public class ConwayMain : MonoBehaviour
 
     private void DeleteAll()
     {
-        _conwayState.Dispose();
-        _previousConwayState.Dispose();
-        _needsRecalc.Dispose();
-
-        _adj_0.Dispose();
-        _adj_1.Dispose();
-        _adj_2.Dispose();
-        _adj_3.Dispose();
-        _adj_4.Dispose();
-        _adj_5.Dispose();
-        _adj_6.Dispose();
-        _adj_7.Dispose();
-        
         _displayState.Dispose();
-
-        _mapAdjacents.Dispose();
-        _mapMirroredDimensions.Dispose();
-
-//        DeleteDisplay(); //
-
     }
 
     
     
-
-    private void SetAdjacents()
-    {
-        for (int x = 0; x < ColumnCount; x++)
-        {
-            for (int y = 0; y < RowCount; y++)
-            {
-                int conwayBaseIndex = _indexer.RawIndexFor(x, y);
-                int adjacentsBaseIndex = conwayBaseIndex * 8;
-
-                for (int i = 0; i < _adjacentOffsets.Length; i++)
-                {
-                    int adjacentOffsetX = _adjacentOffsets[i].XFrom(x);
-                    int adjacentOffsetY = _adjacentOffsets[i].YFrom(y);
-
-                    int adjustedX = SparseGridIndexer.WrappedIndexFor(adjacentOffsetX, ColumnCount);
-                    int adjustedY = SparseGridIndexer.WrappedIndexFor(adjacentOffsetY, RowCount);
-                    ushort adjustedRawValue = (ushort) _indexer.RawIndexFor(adjustedX, adjustedY);
-                    
-                    _mapAdjacents[adjacentsBaseIndex + i] =
-                        (ushort) _indexer.RawIndexFor(adjustedX, adjustedY);
-
-                }
-            }
-        }
-        
-    }
-
-
-    private void SetAdjacentOffsets()
-    {
-        _adjacentOffsets[0] = new CellOffset(1, 0);
-        _adjacentOffsets[1] = new CellOffset(1, 1);
-        _adjacentOffsets[2] = new CellOffset(0, 1);
-        _adjacentOffsets[3] = new CellOffset(-1, 1);
-        _adjacentOffsets[4] = new CellOffset(-1, 0);
-        _adjacentOffsets[5] = new CellOffset(-1, -1);
-        _adjacentOffsets[6] = new CellOffset(0, -1);
-        _adjacentOffsets[7] = new CellOffset(1, -1);
-    }
-
-    public void SetMapMirroredDimensions()
-    {
-        for (int x = 0; x < ColumnCount; x++)
-        {
-            for (int y = 0; y < RowCount; y++)
-            {
-                int dimensionalRawIndex = _indexer.RawIndexFor(x, y) * 4;
-                int mirroredX = SparseGridIndexer.MirroredIndexFor(x, ColumnCount);
-                int mirroredY = SparseGridIndexer.MirroredIndexFor(y, RowCount);
-                
-                ushort firstIndex = (ushort) _indexer.RawIndexFor(x, y);
-                ushort secondIndex = (ushort) _indexer.RawIndexFor(mirroredX, y);
-                ushort thirdIndex = (ushort) _indexer.RawIndexFor(mirroredX, mirroredY);
-                ushort fourthIndex = (ushort) _indexer.RawIndexFor(x, mirroredY);
-
-                _mapMirroredDimensions[dimensionalRawIndex + 0] = firstIndex;
-                _mapMirroredDimensions[dimensionalRawIndex + 1] = secondIndex;
-                _mapMirroredDimensions[dimensionalRawIndex + 2] = thirdIndex;
-                _mapMirroredDimensions[dimensionalRawIndex + 3] = fourthIndex;
-            }
-        }
-    }
     
-    private void SetNeedsRecalc()
-    {
-        _needsRecalc.CopyFrom(_conwayState);
-        _previousConwayState.CopyFrom(_conwayState);
-
-        for (int i = 0; i < _previousConwayState.Length; i++)
-        {
-            if (_previousConwayState[i])
-            {
-                int adjacentsIndex = i * 8;
-                for (int j = 0; j < 8; j++)
-                {
-                    int currentAdjacentIndex = adjacentsIndex + j;
-                    int currentAdjacentRawIndex = _mapAdjacents[currentAdjacentIndex];
-                    _needsRecalc[currentAdjacentRawIndex] = true;
-                }
-            }
-        }
-        
-        for (int i=0;i<_needsRecalc.Length;i++)
-        {
-            if (_needsRecalc[i])
-            {
-                int adjacentsIndex = i * 8;
-
-                for (int j = 0; j < 8; j++)
-                {
-                    int currentAdjacentIndex = adjacentsIndex + j;
-                    int currentAdjacentRawIndex = _mapAdjacents[currentAdjacentIndex];
-                    switch (j)
-                    {
-                        case 0:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_0[i] = true;
-                            else
-                                _adj_0[i] = false;
-                            break;
-                        case 1:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_1[i] = true;
-                            else
-                                _adj_1[i] = false;
-                            break;
-                        case 2:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_2[i] = true;
-                            else
-                                _adj_2[i] = false;
-                            break;
-                        case 3:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_3[i] = true;
-                            else
-                                _adj_3[i] = false;
-                            break;
-                        case 4:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_4[i] = true;
-                            else
-                                _adj_4[i] = false;
-                            break;
-                        case 5:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_5[i] = true;
-                            else
-                                _adj_5[i] = false;
-                            break;
-                        case 6:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_6[i] = true;
-                            else
-                                _adj_6[i] = false;
-                            break;
-                        case 7:
-                            if (_conwayState[currentAdjacentRawIndex])
-                                _adj_7[i] = true;
-                            else
-                                _adj_7[i] = false; 
-                            break;
-                    }
-                }
-            }
-        }
-
-        //LogParallelizedAdjacents();
-    }
-
     private void GenerateDisplay()
     {
         Transform myTransform = this.transform;
@@ -345,7 +133,7 @@ public class ConwayMain : MonoBehaviour
 
         _displayObject = Instantiate(displayObjectPrefab, tempVec, tempQuat, myTransform);
         _display = _displayObject.GetComponent<ConwayDisplayGrid>();
-        _display.InitializeData(_indexer, _displayState, _displayColors);
+        _display.InitializeData(_myConwayState._indexer, _displayState, _displayColors);
 
         Transform displayObjectTransform = _displayObject.GetComponent<Transform>();
         displayObjectTransform.SetParent(myTransform);
@@ -354,8 +142,8 @@ public class ConwayMain : MonoBehaviour
 
     public Vector3 DisplayOriginVector()
     {
-        float xOffset = 0 - (_indexer.columnCount / 2 + _indexer.columnCount / 6);
-        float yOffset = 0 - _indexer.rowCount / 2; 
+        float xOffset = 0 - (_myConwayState._indexer.columnCount / 2 + _myConwayState._indexer.columnCount / 6);
+        float yOffset = 0 - _myConwayState._indexer.rowCount / 2; 
 
         Vector3 returnValue = new Vector3(xOffset, yOffset, 0);
         //Debug.Log("OriginVector: " + returnValue);
@@ -387,34 +175,12 @@ public class ConwayMain : MonoBehaviour
    
     private void SetSimpleDisplayState()
     {
-        for (int i = 0; i < _conwayState.Length; i++)
-        {
-            if (_conwayState[i])
-                _displayState[i] = 4; //hack magic number based on 5 levels of gray in display Color array
-            else
-                _displayState[i] = 0; //hack magic number based on 5 levels of gray in display Color array
-        }
+        _myConwayDisplayState.SetSimpleDisplayState(_myConwayState._conwayState, 64);
     }
 
     private void SetMirroredDisplayState()
     {
-        for (int i=0; i < _displayState.Length; i++)
-        {
-            _displayState[i] = 0;
-        }
-        
-        for (int i = 0; i < _conwayState.Length; i++)
-        {
-            int mirroredDisplayBaseIndex = i * 4;
-
-            if (_conwayState[i])
-            {
-                _displayState[_mapMirroredDimensions[mirroredDisplayBaseIndex]] += 1;
-                _displayState[_mapMirroredDimensions[mirroredDisplayBaseIndex+1]] += 1;
-                _displayState[_mapMirroredDimensions[mirroredDisplayBaseIndex+2]] += 1;
-                _displayState[_mapMirroredDimensions[mirroredDisplayBaseIndex+3]] += 1;
-            }
-        }
+        _myConwayDisplayState.SetMirroredDisplayState(_myConwayState._conwayState);
     }
 
     
@@ -422,181 +188,36 @@ public class ConwayMain : MonoBehaviour
     
     private void TickForwardConwayState()
     {
-        //              Debug.Log("tickForwardConwayState start");
-        _previousConwayState.CopyFrom(_conwayState);
-
-        SetNeedsRecalc();
+        _myConwayState.TickForwardConwayState();
         
-        for (int i = 0; i < _needsRecalc.Length; i++)
-        {
-            //           Debug.Log("tickForwardConwayState inside first loop: " + i);
-            if (_needsRecalc[i])
-            {
-//                Debug.Log("tickForwardConwayState needsRecalc: " + i );
-
-                bool alive = _previousConwayState[i]; //same length as needsRecalc
-                int adjacentIndex = i * 8;
-                int adjacentAliveCount = 0;
-
-                for (int j = 0; j < 8; j++)
-                {
-                    if (_previousConwayState[_mapAdjacents[adjacentIndex + j]])
-                    {
-                        adjacentAliveCount += 1;
-                    }
-                }
-
-                //              Debug.Log("tickForwardConwayState adjacentLiveCount: " + adjacentAliveCount);
-                if (alive)
-                {
-                    if ((adjacentAliveCount < 2)|| (adjacentAliveCount > 3))  
-                        _conwayState[i] = false;
-                }
-                else //cell is dead
-                {
-                    if (adjacentAliveCount == 3)
-                    {
-                        _conwayState[i] = true;
-                    }
-                }
-            }
-        }
-
-        //       Debug.Log("tickForwardConwayState finish");
-
+        //reinsert when the parallel logic works right
+        /*
+        if (useParallelLogic)
+            _myConwayState.TickForwardConwayState(parallelGrain);
+        else
+            _myConwayState.TickForwardConwayState();
+            */
     }
 
-    private void TickForwardConwayStateParallel()
-    {
-        //copy conwayState into previousConwayState
-        _previousConwayState.CopyFrom(_conwayState);
-
-        //set needsRecalc
-        //copy conwayState into needsRecalc array (overwrite)
-        //set all living adjacents (might imply possible race condition if parallel)
-        SetNeedsRecalc();
-        
-        //for all true in needsRecalc, recalc conwayState entry - add adjacents for recalc cell, switch on living and sum conditions
-        //parallelize
-        //input: needsRecalc (indexed source), adjacents, previousConwayState
-        //output target: conwayState
-        TickForwardJob parallelConwayTick = new TickForwardJob();
-        parallelConwayTick.jobConwayState = _conwayState;
-        parallelConwayTick.jobPreviousConwayState = _previousConwayState;
-        parallelConwayTick.jobNeedsRecalc = _needsRecalc;
-        parallelConwayTick.jobAdj_0 = _adj_0;
-        parallelConwayTick.jobAdj_1 = _adj_1;
-        parallelConwayTick.jobAdj_2 = _adj_2;
-        parallelConwayTick.jobAdj_3 = _adj_3;
-        parallelConwayTick.jobAdj_4 = _adj_4;
-        parallelConwayTick.jobAdj_5 = _adj_5;
-        parallelConwayTick.jobAdj_6 = _adj_6;
-        parallelConwayTick.jobAdj_7 = _adj_7;
-        
-        JobHandle tickJob = parallelConwayTick.Schedule(_conwayState.Length, 50);
-        tickJob.Complete();
-    }
-    
-    [BurstCompile]
-    private struct TickForwardJob : IJobParallelFor
-    {
-        public NativeArray<bool> jobConwayState;
-        
-        [ReadOnly]
-        public NativeArray<bool> jobPreviousConwayState;
-        [ReadOnly]
-        public NativeArray<bool> jobNeedsRecalc;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_0;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_1;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_2;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_3;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_4;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_5;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_6;
-        [ReadOnly]
-        public NativeArray<bool> jobAdj_7;
-        
-        public void Execute(int index)
-        {
-            if (jobNeedsRecalc[index])
-            {
-                byte livingAdjacentCount = 0;
-
-                if (jobAdj_0[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_1[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_2[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_3[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_4[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_5[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_6[index])
-                    livingAdjacentCount += 1;
-                if (jobAdj_7[index])
-                    livingAdjacentCount += 1;
-                
-                if (jobPreviousConwayState[index]) //cell is alive
-                {
-                    if (!(livingAdjacentCount==2) && !(livingAdjacentCount==3))
-                        jobConwayState[index] = false;
-                }
-                else //cell is dead
-                {
-                    if (livingAdjacentCount == 3)
-                        jobConwayState[index] = true;
-                }
-            }
-            
-        }
-    }
-    
     
     
     public void ToggleStateAt(int x, int y)
     {
-        int rawIndex = _indexer.RawIndexFor(x, y);
-        //Debug.Log("ToggleStateAt rawIndex: " + rawIndex);
-        if (_conwayState[rawIndex])
-            _conwayState[rawIndex] = false;
-        else
-            _conwayState[rawIndex] = true;
-        
+        _myConwayState.ToggleStateAt(x, y);
         UpdateDisplay();
 
     }
 
     public void ClearMap()
     {
-        for (int i = 0; i < _conwayState.Length; i++)
-        {
-            _conwayState[i] = false;
-        }
-
+        _myConwayState.ClearMap(parallelGrain);
         _tickerActive = false;
     }
 
     public void RandomizeState()
     {
-        ClearMap();
-
-        for (int i = 0; i < _conwayState.Length / 5; i++)
-        {
-//            Random(conwayState.Length)
-            //create random index
-            int randomIndex = UnityEngine.Random.Range(0, _conwayState.Length - 1);
-            _conwayState[randomIndex] = true;
-        }
+        _myConwayState.RandomizeState(parallelGrain);
+        _tickerActive = false;
     }
 
 
@@ -630,37 +251,16 @@ public class ConwayMain : MonoBehaviour
     //*** todo: should handle wrapping of indices 
     public void SetBrushAt(int x, int y, CellOffset[] brush)
     {
-
-        for (int i = 0; i < brush.Length; i++)
-        {
-            CellOffset tempOffset = brush[i];
-
-            int newX = tempOffset.XFrom(x);
-            int newY = tempOffset.YFrom(y);
-
-            int newRawIndex = _indexer.RawIndexFor(newX, newY);
-            if (newRawIndex < _conwayState.Length)
-                _conwayState[newRawIndex] = true;
-        }
-
+        _myConwayState.SetBrushAt(x, y, brush);
     }
 
     public void CenterBrush(CellOffset[] brush)
     {
-        //Debug.Log("center brush");
-        int halfColumnCount = ColumnCount / 2;
-        int halfRowCount = RowCount / 2;
-
-        int halfBrushWidth = BrushFactory.WidthForBrush(brush) / 2;
-        int halfBrushHeight = BrushFactory.HeightForBrush(brush) / 2;
-
-        Debug.Log("halfBrushWidth: " + halfBrushWidth + " halfColumnCount: " + halfColumnCount + " halfBrushHeight: " + halfBrushHeight + " halfRowCount: "  + halfRowCount);
-        if ((halfBrushWidth > halfColumnCount) || (halfBrushHeight > halfRowCount))
-            SetBrushAt(0, 0, brush);
-        else
-            SetBrushAt(halfColumnCount - halfBrushWidth, halfRowCount - halfBrushHeight, brush);
+        _myConwayState.CenterBrush(brush);
+        
     }
 
+    /*
     private void LogState()
     {
         String tempString = "";
@@ -727,28 +327,31 @@ public class ConwayMain : MonoBehaviour
         tempString += "\r\r";
         Debug.Log(tempString);
     }
+*/
 
+    /*
     private void LogParallelizedAdjacents()
     {
         LogSimpleState("\rNeeds Recalc",  _needsRecalc);
         
         Debug.Log("\rAdjacent State: \r\r");
-        LogSimpleState("Adjacent_0",  _adj_0);
-        LogSimpleState("Adjacent_1",  _adj_1);
-        LogSimpleState("Adjacent_2",  _adj_2);
-        LogSimpleState("Adjacent_3",  _adj_3);
-        LogSimpleState("Adjacent_4",  _adj_4);
-        LogSimpleState("Adjacent_5",  _adj_5);
-        LogSimpleState("Adjacent_6",  _adj_6);
-        LogSimpleState("Adjacent_7",  _adj_7);
+        LogSimpleState("Adjacent_0",  _adj_val_0);
+        LogSimpleState("Adjacent_1",  _adj_val_1);
+        LogSimpleState("Adjacent_2",  _adj_val_2);
+        LogSimpleState("Adjacent_3",  _adj_val_3);
+        LogSimpleState("Adjacent_4",  _adj_val_4);
+        LogSimpleState("Adjacent_5",  _adj_val_5);
+        LogSimpleState("Adjacent_6",  _adj_val_6);
+        LogSimpleState("Adjacent_7",  _adj_val_7);
 
     }
+    */
 
     private void OnDestroy()
     {
         Ticker.OnTick -= delegate {  }; //unclear if this correct
         DeleteAll();
-        _adjacentOffsets.Dispose();
+       // _adjacentOffsets.Dispose();
     }
     
     //use (and probably fix) when UI driven resize is possible

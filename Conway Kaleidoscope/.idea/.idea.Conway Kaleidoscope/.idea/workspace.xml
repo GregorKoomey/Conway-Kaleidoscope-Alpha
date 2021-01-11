@@ -2,9 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="01d56c1d-9655-4983-983e-0a8d1533f71b" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/contentModel.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/indexLayout.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/indexLayout.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,15 +23,27 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9577AC7A-62EF-4317-9789-031239BA8798/12/fc1f64cf/Monitor.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/structs/CellOffset.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayDisplayGrid.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Classes/ConwayDisplayState.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/structs/BrushFactory.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/3324648A-58A6-4D79-A1D0-08F8966307A6/eb/cbdb3186/AtomicSafetyHandle.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/EF151B6A-BB5D-474C-B2C1-CB8906A8B5A4/71/5ef7ce4d/Socket.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9577AC7A-62EF-4317-9789-031239BA8798/87/691b1158/TaskAwaiter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/structs/GridEntities.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/structs/NArrayUtil.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayDisplayGrid.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/DropDowns/KaleidoscopeDropDown.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Classes/GridEntitySpawner.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/structs/GridEntities.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayState.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/structs/CellOffset.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayDisplayState.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayStateClass.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/structs/NArrayUtil.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1kCf493sgYTI2rOV0PMqtWsn7vG" />
@@ -83,7 +99,10 @@
       <workItem from="1606079302577" duration="74813000" />
       <workItem from="1607199404770" duration="14485000" />
       <workItem from="1607281343499" duration="13185000" />
-      <workItem from="1608142160681" duration="1168000" />
+      <workItem from="1608142160681" duration="1585000" />
+      <workItem from="1608503674752" duration="8352000" />
+      <workItem from="1609181034793" duration="30661000" />
+      <workItem from="1610052129952" duration="2326000" />
     </task>
     <servers />
   </component>
@@ -102,6 +121,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />

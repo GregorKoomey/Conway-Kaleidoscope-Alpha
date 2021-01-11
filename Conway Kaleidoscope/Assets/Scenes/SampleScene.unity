@@ -448,7 +448,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Version a.01
+  m_text: Version a.02
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1660,10 +1660,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pausedDropdown: {fileID: 1382916534}
-  gridSize: 128
+  gridSize: 64
+  useParallelLogic: 0
   displayObjectPrefab: {fileID: 3491925741446082399, guid: b0ddefa2e91ab4839817d5bfdd964583,
     type: 3}
-  useParallelLogic: 0
   ColumnCount: 0
   RowCount: 0
   RawCount: 0
