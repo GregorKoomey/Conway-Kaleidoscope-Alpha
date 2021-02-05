@@ -2,13 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="01d56c1d-9655-4983-983e-0a8d1533f71b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/indexLayout.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/indexLayout.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Conway Kaleidoscope/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayStateClass.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayStateClass.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayDotsDisplayGrid.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayDotsDisplayGrid.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Packages/packages-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Packages/packages-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/structs/CellOffset.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/structs/CellOffset.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,17 +33,18 @@
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
-      <option value="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayDisplayGrid.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/DropDowns/KaleidoscopeDropDown.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/Classes/GridEntitySpawner.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/structs/GridEntities.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayState.cs" />
-      <option value="$PROJECT_DIR$/Assets/Scripts/structs/CellOffset.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayDisplayState.cs" />
-      <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayStateClass.cs" />
-      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/structs/NArrayUtil.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayDotsDisplayGrid.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/structs/CellOffset.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/structs/SparseGridIndexer.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/monobehaviors/ConwayMain.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Classes/ConwayStateClass.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="1kCf493sgYTI2rOV0PMqtWsn7vG" />
@@ -102,7 +103,8 @@
       <workItem from="1608142160681" duration="1585000" />
       <workItem from="1608503674752" duration="8352000" />
       <workItem from="1609181034793" duration="30661000" />
-      <workItem from="1610052129952" duration="2326000" />
+      <workItem from="1610052129952" duration="6585000" />
+      <workItem from="1612148661777" duration="14435000" />
     </task>
     <servers />
   </component>

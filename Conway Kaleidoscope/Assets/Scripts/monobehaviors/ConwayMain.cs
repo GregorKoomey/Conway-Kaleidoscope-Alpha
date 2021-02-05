@@ -11,7 +11,7 @@ public class ConwayMain : MonoBehaviour
 {
     public GameObject pausedDropdown;
     
-    [Range(2, 256)] [SerializeField] private ushort gridSize;
+    [Range(2, 128)] [SerializeField] private ushort gridSize;
     public bool useParallelLogic;
 
     private int parallelGrain;
@@ -188,8 +188,8 @@ public class ConwayMain : MonoBehaviour
     
     private void TickForwardConwayState()
     {
-        _myConwayState.TickForwardConwayState();
         
+        _myConwayState.TickForwardConwayState();
         //reinsert when the parallel logic works right
         /*
         if (useParallelLogic)

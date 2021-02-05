@@ -1,4 +1,8 @@
-﻿//intended as external to source nativeArray or array of columncount* rowcount length
+﻿using Unity.Burst;
+using UnityEngine;
+
+//intended as external to source nativeArray or array of columncount* rowcount length
+[BurstCompile]
 public struct SparseGridIndexer
 {
     public readonly int columnCount;
@@ -19,13 +23,14 @@ public struct SparseGridIndexer
     //test these two methods (should they swap logic and/or is there more?)
     public int XForRawIndex(int rawIndex)
     {
+//        int returnValue = (rawIndex - 1) % columnCount;
         int returnValue = rawIndex % columnCount;
         return returnValue;
     }
 
     public int YForRawIndex(int rawIndex)
     {
-        int returnValue = rawIndex % rowCount;
+        int returnValue = rawIndex / rowCount;
         return returnValue;
     }
  
@@ -55,6 +60,24 @@ public struct SparseGridIndexer
         return cellIndex;
     }
 
+    public int RawIndexFor(int rawIndex, CellOffset offset)
+    {
+        int currentX = XForRawIndex(rawIndex);
+        int currentY = YForRawIndex(rawIndex);
+        
+        int adjacentOffsetX = offset.XFrom(currentX);
+        int adjacentOffsetY = offset.YFrom(currentY);
+
+        int adjustedX = WrappedIndexFor(adjacentOffsetX, columnCount);
+        int adjustedY = WrappedIndexFor(adjacentOffsetY, rowCount);
+
+       // Debug.Log("RawIndexFor:");
+        //Debug.Log("index: " + rawIndex + " currentX: " + currentX + " currentY: "+ currentY +" xOffset: " + offset.xOffset + " yOffset: " + offset.yOffset + " adjustedX: " + adjustedX + " adjustedY: " + adjustedY);
+
+        return RawIndexFor(adjustedX, adjustedY);
+        
+    }
+
     public static int BoundedIndexFor(int query, ushort bounds)
     {
         if ((query < 0) || (bounds == 0))
@@ -66,6 +89,28 @@ public struct SparseGridIndexer
         return query;
     }
 
+    public static int WrappedIndexFor(int query, int bounds)
+    {
+        if ((0 <= query) && (query < bounds))
+        {
+            return query;
+        }
+
+        if (query < 0)
+        {
+            int adjustedQuery = query;
+            if ((0 - adjustedQuery) > bounds)
+            {
+                adjustedQuery = query % bounds;
+            }
+
+            return bounds + adjustedQuery;
+        }
+        
+        return query % bounds;
+    }
+    
+    
     public static int WrappedIndexFor(int query, ushort bounds)
     {
         if ((0 <= query) && (query < bounds))
@@ -91,6 +136,7 @@ public struct SparseGridIndexer
     {
         return bounds - 1 - query;
     }
+
 
 }
 

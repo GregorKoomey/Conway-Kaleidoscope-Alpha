@@ -24,7 +24,7 @@ public class ConwayStateClass
     public NativeArray<bool> _conwayState;
     private NativeArray<bool> _previousConwayState;
     private NativeArray<bool> _needsRecalc;
-    private NativeArray<ushort> _mapAdjacents;
+    //private NativeArray<ushort> _mapAdjacents;
    // private NativeArray<byte> _conwayCount;
 
     
@@ -68,7 +68,7 @@ public class ConwayStateClass
     
         _adjacentOffsets = BuildAdjacentOffsets();
         //Debug.Log("_adjacentOffsets length: " + _adjacentOffsets.Length);
-        _mapAdjacents = BuildAdjacents(_indexer, _adjacentOffsets);
+        //_mapAdjacents = BuildAdjacents(_indexer, _adjacentOffsets);
         //Debug.Log("_mapAdjacents length: " + _mapAdjacents.Length);
 
         
@@ -80,9 +80,10 @@ public class ConwayStateClass
     private void DeallocateData()
     {
         _conwayState.Dispose();
+        _previousConwayState.Dispose();
         _needsRecalc.Dispose();
         _adjacentOffsets.Dispose();
-        _mapAdjacents.Dispose();
+        //_mapAdjacents.Dispose();
 
 
     }
@@ -146,12 +147,13 @@ public class ConwayStateClass
         {
             if (_conwayState[i])
             {
-                int adjacentsIndex = i * 8;
+                //int adjacentsIndex = i * 8;
                 for (int j = 0; j < 8; j++)
                 {
-                    int currentAdjacentIndex = adjacentsIndex + j;
-                    int currentAdjacentRawIndex = _mapAdjacents[currentAdjacentIndex];
-                    _needsRecalc[currentAdjacentRawIndex] = true;
+                    
+                    int currentAdjacentIndex = _indexer.RawIndexFor(i, _adjacentOffsets[j]);
+                    _needsRecalc[currentAdjacentIndex] = true;
+                    //Debug.Log("i: " + i + " adjacentIndex: " + j + " value:  " + currentAdjacentIndex);
                 }
             }
         }
@@ -174,14 +176,16 @@ public class ConwayStateClass
 //                Debug.Log("tickForwardConwayState needsRecalc: " + i );
 
                 bool alive = _previousConwayState[i]; //same length as needsRecalc
-                int adjacentIndex = i * 8;
+                //int adjacentIndex = i * 8;
                 int adjacentAliveCount = 0;
 
                 for (int j = 0; j < 8; j++)
                 {
-                    if (_previousConwayState[_mapAdjacents[adjacentIndex + j]])
+                    if (_previousConwayState[_indexer.RawIndexFor(i, _adjacentOffsets[j])])
                     {
                         adjacentAliveCount += 1;
+                        if (adjacentAliveCount > 3)
+                            break;
                     }
                 }
 
@@ -205,6 +209,7 @@ public class ConwayStateClass
 
     }
     
+    /*
     //with jobs
     public void TickForwardConwayState(int parallelGrain)
     {
@@ -212,8 +217,9 @@ public class ConwayStateClass
         NativeArrayUtil.CopyNativeArray(_conwayState, _previousConwayState, parallelGrain);
         
         TickForwardConwayJob conwayJob = new TickForwardConwayJob();
+        conwayJob.indexer = _indexer;
         conwayJob.conwayState = _conwayState;
-        conwayJob.mapAdjacents = _mapAdjacents;
+        conwayJob.cellOffsets = _adjacentOffsets;
         conwayJob.needsRecalc = _needsRecalc;
         conwayJob.previousConwayState = _previousConwayState;
 
@@ -224,22 +230,23 @@ public class ConwayStateClass
     [BurstCompile]
     private struct     TickForwardConwayJob : IJobParallelFor
     {
+        public SparseGridIndexer indexer;
         public NativeArray<bool> conwayState;
         public NativeArray<bool> previousConwayState; //set external to job (copy of conwayState)
         public NativeArray<bool> needsRecalc;
-        public  NativeArray<ushort> mapAdjacents;
-        
+        //public  NativeArray<ushort> mapAdjacents;
+        public NativeArray<CellOffset> cellOffsets;
         
         public void Execute(int index)
         {
             if (needsRecalc[index])
             {
-                int baseOffsetsAddress = index * 8;
+                //int baseOffsetsAddress = index * 8;
                 int adjacentCount = 0;
 
                 for (int i = 0; i < 8; i++)
                 {
-                    if (previousConwayState[mapAdjacents[baseOffsetsAddress + i]])
+                    if (previousConwayState[indexer.RawIndexFor(index, cellOffsets[i])])
                         adjacentCount += 1;
                     if (adjacentCount == 4)
                         break;
@@ -258,7 +265,7 @@ public class ConwayStateClass
             }
         }
     }
-
+*/
     
     public void ToggleStateAt(int x, int y)
     {

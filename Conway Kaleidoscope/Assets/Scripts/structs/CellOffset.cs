@@ -1,4 +1,7 @@
-﻿public struct CellOffset
+﻿using Unity.Burst;
+
+[BurstCompile]
+public struct CellOffset
 {
     public readonly int xOffset;
     public readonly int yOffset;
